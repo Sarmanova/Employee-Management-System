@@ -1,9 +1,7 @@
 const express = require("express")
-
-// Import and require mysql2
+    // Import and require mysql2
 const mysql = require("mysql2");
 const index = require("./index")
-
 const PORT = process.env.PORT || 3001;
 const app = express();
 
@@ -18,14 +16,14 @@ const db = mysql.connectedMysql({
         user: "root",
         // MySQL password
         password: "Zhansaya1993@",
-        database: "employee_db",
+        database: "corporation_db",
     },
-    console.log(`Connected to the employee_db database.`)
+    console.log(`Connected to the corporation_db database.`)
 );
-db.query("SELECT * FROM employee", function(err, results) {
+db.query("SELECT * FROM employees", function(err, results) {
     console.log(results);
 });
-db.query("SELECT * FROM role", function(err, results) {
+db.query("SELECT * FROM roles", function(err, results) {
     console.log(results);
 });
 db.query("SELECT * FROM department", function(err, results) {
