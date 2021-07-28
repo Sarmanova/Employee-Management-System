@@ -21,7 +21,8 @@ VALUES (001,"John", "Doe", 1, NULL),
     (002,"Mike", "Chan", 2, 1),
     (003,"Ashley", "Rodriguez", 3, NULL),
     (004,"Kevin", "Tupik", 4, 3),
-    (005,"Kunal", "Singh", 5, NULL),
+    (005,"Kunal", "Singh", 5, NULL),INSERT INTO employees (id,first_name, last_name, role_id, manager_id)
+VALUES (009,"John", "Doe", 1, NULL)
     (006,"Malia", "Brown", 6, 5),
     (007,"Sarah", "Lourd", 7, NULL),
     (008,"Tom", "Allen", 8, 7);

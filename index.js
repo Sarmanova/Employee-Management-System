@@ -29,13 +29,13 @@ function firstPrompt() {
             name: "doWhat",
         }, ])
         .then((answer) => {
-            console.log(answer.doWhat);
+            // console.log(answer.doWhat);
             let question = answer.doWhat;
             switch (question) {
                 case "View All Employees":
                     viewAllEmployees();
                     break;
-                case "Add Employees":
+                case "Add Employee":
                     addEmployee();
                     break;
                 case "Add Roles":
@@ -72,7 +72,7 @@ function viewAllEmployees() {
 
 function viewAllRoles() {
     db.query(
-        "SELECT title, d.name AS department, salary FROM roles r INNER JOIN department d ON r.department_id = d.id;",
+        "SELECT id,title, d.name AS department, salary FROM roles r INNER JOIN department d ON r.department_id = d.id;",
         (err, answer) => {
             if (err) {
                 console.log(err);
@@ -97,99 +97,118 @@ function viewAllDepartment() {
 }
 
 function addEmployee() {
-    inquirer.prompt([{
-            type: "input",
-            message: "What is employee's first name?",
-            name: "first name",
-        },
-        {
-            type: "input",
-            message: "What is employee's last name?",
-            name: "last name",
-        },
-        {
-            type: "list",
-            message: "What is employee's role?",
-            name: "role",
-            choices: [
-                "Sales Lead",
-                "Salesperson",
-                "Lead Engineering",
-                "Software Engineering",
-                "Account manager",
-                "Accoutant",
-                "Legal Team Lead",
-                "Lawyer",
-            ],
-        },
-        {
-            type: "list",
-            message: "Who is the employee's manager?",
-            name: "manager",
-            choices: [
-                " John Doe",
-                "Mike Chan",
-                "Ashlet Rodriguez",
-                "Kevin Tupik",
-                "Kunal Singh",
-                "Malia Brown",
-                "Sarah Lourd",
-                "Tom Allen",
-                "None",
-            ],
-        },
-    ]).then((answer) => {
-        let emplFname = answer.emplFname;
-        let emplLname = answer.emplLname;
-        let emplRole = answer.emplRole;
-        let emplManager = answer.emplManager;
-        db.query(
-            `INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ("${emplFname}", "${emplLname}", "${emplRole}", "${emplManager}");`,
-            (err, results) => {
-                if (err) return err;
-                console.log(`\n Added ${emplFname} to the database! \n`);
-            }
-        );
+    inquirer
+        .prompt([{
+                type: "input",
+                message: "What is employee's id?",
+                name: "employees_id",
+            },
+            {
+                type: "input",
+                message: "What is employee's first name?",
+                name: "empFirstname",
+            },
+            {
+                type: "input",
+                message: "What is employee's last name?",
+                name: "empLastname",
+            },
+            {
+                type: "list",
+                message: "What is employee's role?",
+                name: "emplRole",
+                choices: [
+                    "Sales Lead",
+                    "Salesperson",
+                    "Lead Engineering",
+                    "Software Engineering",
+                    "Account manager",
+                    "Accoutant",
+                    "Legal Team Lead",
+                    "Lawyer",
+                ],
+            },
+            {
+                type: "list",
+                message: "Who is the employee's manager?",
+                name: "emplManager",
+                choices: [
+                    " John Doe",
+                    "Mike Chan",
+                    "Ashlet Rodriguez",
+                    "Kevin Tupik",
+                    "Kunal Singh",
+                    "Malia Brown",
+                    "Sarah Lourd",
+                    "Tom Allen",
+                    "None",
+                ],
+            },
+        ])
+        .then((answer) => {
+            console.log(answer);
+            let employees_id = answer.employees_id;
+            let empFirstname = answer.empFirstname;
+            let empLastname = answer.empLastname;
+            let emplRole = answer.emplRole;
+            let emplManager = answer.emplManager;
+            db.query(
+                `INSERT INTO employees (id,first_name, last_name, role_id, manager_id) VALUES (${employees_id},${empFirstname},${empLastname},${emplRole}','${emplManager}')`,
+                (err, results) => {
+                    if (err) return err;
+                    console.log(`\n Added ${empLastname} to the database!\n `);
+                }
+            );
 
-        // Check for what to do next
-        firstPrompt();
-    });
+            firstPrompt();
+        });
 }
 
 function addRoles() {
-    inquirer.prompt([{
-            type: "list",
-            message: "Which employee's role do you want to update?",
-            name: "update",
-            choices: [
-                "John Doe",
-                "Mike Chan",
-                "Ashley Rodriguez",
-                "Kevin Tupik",
-                "Kunal Singh",
-                "Malia Brown",
-                "Sarah Lourd",
-                "Tom Nelson",
-            ],
-        },
-        {
-            type: "input",
-            message: "What is the name of the role?",
-            name: "role",
-        },
-        {
-            type: "input",
-            message: "What is the salary  of the role?",
-            name: "salary",
-        },
-    ]).then((answer) => {
-        let getTitle = answer.getTitle;
-        let getSalary = answer.getSalary;
-        let getDepartment = answer.getDepartment;
-        const addNewRole = new Role(getTitle, getSalary, getDepartment);
-        console.log(addNewRole);
-        firstPrompt();
-    });
+    inquirer
+        .prompt([{
+                type: "input",
+                message: "What is the name of the role?",
+                name: "role",
+            },
+            {
+                type: "input",
+                message: "What is the salary  of the role?",
+                name: "salary",
+            },
+
+            {
+                type: "list",
+                message: "What is name of the department?",
+                name: "depName",
+                choices: depName,
+            },
+        ])
+        .then((answer) => {
+            console.log(answer);
+            let getRoleName = answer.getRoleName;
+            let getRoleSalary = answer.getRoleSalary;
+            let getRoleDep = answer.getRoleDep;
+            // let departmentId;
+            // for (let i = 0; i < depName.length; i++) {
+            //     if (getRoleDep == depName[i].name) {
+            //         departmentId = depName[i].id;
+            //     }
+            // }
+            //console.log(departmentId);
+
+            db.query(
+                `
+                        INSERT INTO roles(title, salary, department.name AS department) VALUES("${getRoleName}", $ { getRoleSalary }, $ { getRoleDep });
+                        `,
+                function(err, results) {
+                    if (err) return err;
+
+                    console.log("Added New Roles");
+                }
+            );
+            firstPrompt();
+        });
 
 }
 
@@ -211,15 +230,18 @@ function addDepartment() {
             },
         ])
         .then((answer) => {
-            console.log("hit")
+            console.log(answer)
             let getName = answer.getName;
             depName.push(getName);
+            //console.log("hit");
             db.query(
-                `INSERT INTO department (name) VALUES ("${getName}");`,
+                `
+                        INSERT INTO department(id, name) VALUES(005, "${getName}");
+                        `,
                 function(err, answer) {
                     if (err) return err;
 
-                    console.log("\n Added Department! \n");
+                    console.log(answer);
                 }
             );
             firstPrompt();
