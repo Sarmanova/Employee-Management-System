@@ -7,7 +7,7 @@ INNER JOIN employee -- third table's name
 ON employee.role_id =role.role_id
 -- it is secoind way to join 3 tables 
 SELECT id, first_name,last_name,title,department.name AS department,salary,manager_id, role_id
-FROM department,role,employee --all 
+FROM department,roles,employees 
 WHERE department_id = department_id AND role_id =role_id;
 -- it is third way to join 3 tables 
 SELECT  employees_id,first_name,last_name,title,salary,department.name AS department,manager_id, role_id
