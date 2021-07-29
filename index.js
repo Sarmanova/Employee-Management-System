@@ -1,6 +1,9 @@
+//Including packages for this application
 const fs = require("fs");
 const inquirer = require("inquirer");
+
 const express = require("express");
+// Import and require mysql2
 const mysql = require("mysql2");
 
 const PORT = process.env.PORT || 3001;
@@ -23,7 +26,7 @@ const db = mysql.createConnection({
     console.log(`Connected to the corporation_db database.`)
 );
 
-
+//Presents the user with options to choose
 const allOptions = [{
     type: "list",
     message: "What would you like to do?",
@@ -41,13 +44,13 @@ const allOptions = [{
 
 const addDepartment = [{
     type: "input",
-    message: "What is the name of the department ?",
+    message: "What is the name of the department you would like to add?",
     name: "department",
 }, ];
 
 const addRole = [{
         type: "input",
-        message: "What is the name of the role ?",
+        message: "What is the name of the role you would like to add?",
         name: "role",
     },
     {
@@ -105,13 +108,13 @@ const updateRole = [{
 function init() {
     //Populate roledepartment dropdown with the values currently in the Database
     db.query("SELECT name FROM department", function(err, results) {
-        let departmentNames = results;
+        var departmentNames = results;
         addRole[2].choices = departmentNames;
     });
 
     //Populate role dropdown with the values correctly in the Database
     db.query("SELECT title as name FROM roles", function(err, results) {
-        let roleNames = results;
+        var roleNames = results;
         addEmployee[2].choices = roleNames;
         updateRole[1].choices = roleNames;
     });
@@ -120,7 +123,7 @@ function init() {
     db.query(
         'SELECT CONCAT(first_name, " ", last_name) as name FROM employee WHERE manager_id is null',
         function(err, results) {
-            let managerNames = results;
+            var managerNames = results;
             addEmployee[3].choices = managerNames;
             addEmployee[3].choices.push("No manager needed");
         }
@@ -130,7 +133,7 @@ function init() {
     db.query(
         'SELECT CONCAT(first_name, " ", last_name) as name FROM employee',
         function(err, results) {
-            let employeeNames = results;
+            var employeeNames = results;
             updateRole[0].choices = employeeNames;
         }
     );
@@ -141,7 +144,7 @@ function init() {
 function askQuestion() {
     inquirer.prompt(allOptions).then((allOptionsResponses) => {
         // Switch cases
-        let userSelection = allOptionsResponses.useroption;
+        var userSelection = allOptionsResponses.useroption;
         switch (userSelection) {
             case "View All Departments":
                 db.query("SELECT * FROM department", function(err, results) {
@@ -161,9 +164,9 @@ function askQuestion() {
                     askQuestion();
                 });
                 break;
-            case "Add a Department":
+            case "Add Department":
                 inquirer.prompt(addDepartment).then((departmentResponse) => {
-                    let department = departmentResponse.department;
+                    var department = departmentResponse.department;
                     db.query(
                         `INSERT INTO department(name)
                                 VALUES("${department}");`,
@@ -172,19 +175,19 @@ function askQuestion() {
                                 console.log("error:" + err.message);
                                 return;
                             } else {
-                                console.log("Added!");
+                                console.log("success!");
                             }
                             askQuestion();
                         }
                     );
                 });
                 break;
-            case "Add a Role":
+            case "Add Role":
                 inquirer.prompt(addRole).then((roleResponse) => {
-
-                    let name = roleResponse.role;
-                    let salary = roleResponse.salary;
-                    let department = roleResponse.department;
+                    //Insert new role with name, salary and departments input by the user into database
+                    var name = roleResponse.role;
+                    var salary = roleResponse.salary;
+                    var department = roleResponse.department;
                     db.query(
                         `INSERT INTO roles(department_id, title, salary)
                             VALUES((SELECT id FROM department WHERE name = "${department}"), "${name}", "${salary}");`,
@@ -200,41 +203,41 @@ function askQuestion() {
                     );
                 });
                 break;
-            case "Add an Employee":
+            case "Add Employee":
                 inquirer.prompt(addEmployee).then((employeeResponse) => {
-
-                    let firstName = employeeResponse.firstname;
-                    let lastName = employeeResponse.lastname;
-                    let role = employeeResponse.employeerole;
-                    let manager = employeeResponse.employeemanager;
+                    //Insert new employee with firstname, lastname, role
+                    var firstName = employeeResponse.firstname;
+                    var lastName = employeeResponse.lastname;
+                    var role = employeeResponse.employeerole;
+                    var manager = employeeResponse.employeemanager;
 
                     if (manager !== "No manager needed") {
                         db.query(
                             `SELECT id FROM employee WHERE CONCAT(first_name, " ", last_name) = "${manager}"`,
                             function(err, results) {
-                                let managerid = results[0].id;
-                                let query = `INSERT INTO employee(roles_id, first_name, last_name, manager_id)
+                                var managerid = results[0].id;
+                                var query = `INSERT INTO employee(roles_id, first_name, last_name, manager_id)
                                     VALUES((SELECT id FROM roles WHERE title = "${role}"), "${firstName}", "${lastName}", ${managerid});`;
                                 db.query(query, function(err, results) {
                                     if (err) {
                                         console.log(err);
                                         return;
                                     } else {
-                                        console.log("Added!");
+                                        console.log("success!");
                                     }
                                     askQuestion();
                                 });
                             }
                         );
                     } else {
-                        let query = `INSERT INTO employee(roles_id, first_name, last_name)
+                        var query = `INSERT INTO employee(roles_id, first_name, last_name)
                                     VALUES((SELECT id FROM roles WHERE title = "${role}"), "${firstName}", "${lastName}");`;
                         db.query(query, function(err, results) {
                             if (err) {
                                 console.log("error:" + err.message);
                                 return;
                             } else {
-                                console.log("Added!");
+                                console.log("success!");
                             }
                             askQuestion();
                         });
@@ -244,8 +247,8 @@ function askQuestion() {
             case "Update an Employee Role":
                 inquirer.prompt(updateRole).then((updateroleResponse) => {
                     //Update role for employee selected
-                    let employee = updateroleResponse.employeeUpdate;
-                    let role = updateroleResponse.employeeRoleUpdate;
+                    var employee = updateroleResponse.employeeUpdate;
+                    var role = updateroleResponse.employeeRoleUpdate;
                     db.query(
                         `UPDATE employee
                             SET roles_id = (SELECT id FROM roles WHERE title = "${role}")
@@ -255,7 +258,7 @@ function askQuestion() {
                                 console.log("error:" + err.message);
                                 return;
                             } else {
-                                console.log("Added!");
+                                console.log("success!");
                             }
                             askQuestion();
                         }
