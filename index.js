@@ -1,5 +1,5 @@
 //Including packages for this application
-const fs = require("fs");
+//const fs = require("fs");
 const inquirer = require("inquirer");
 
 const express = require("express");
@@ -104,22 +104,21 @@ const updateRole = [{
     },
 ];
 
-// Function to initialize app
+
 function init() {
-    //Populate roledepartment dropdown with the values currently in the Database
+
     db.query("SELECT name FROM department", function(err, results) {
-        var departmentNames = results;
+        let departmentNames = results;
         addRole[2].choices = departmentNames;
     });
 
-    //Populate role dropdown with the values correctly in the Database
     db.query("SELECT title as name FROM roles", function(err, results) {
         var roleNames = results;
         addEmployee[2].choices = roleNames;
-        updateRole[1].choices = roleNames;
+        //updateRole[1].choices = roleNames;
     });
 
-    //Populate manager dropdown with the managers in the employees table
+
     db.query(
         'SELECT CONCAT(first_name, " ", last_name) as name FROM employee WHERE manager_id is null',
         function(err, results) {
@@ -129,7 +128,7 @@ function init() {
         }
     );
 
-    //Populate employee dropdown with all employees in employees table
+
     db.query(
         'SELECT CONCAT(first_name, " ", last_name) as name FROM employee',
         function(err, results) {
@@ -175,7 +174,7 @@ function askQuestion() {
                                 console.log("error:" + err.message);
                                 return;
                             } else {
-                                console.log("success!");
+                                console.log("Added!");
                             }
                             askQuestion();
                         }
@@ -183,11 +182,12 @@ function askQuestion() {
                 });
                 break;
             case "Add Role":
-                inquirer.prompt(addRole).then((roleResponse) => {
-                    //Insert new role with name, salary and departments input by the user into database
-                    var name = roleResponse.role;
-                    var salary = roleResponse.salary;
-                    var department = roleResponse.department;
+                inquirer.prompt(addRole).then((answer) => {
+                    let name = answer.role;
+                    let salary = answer.salary;
+                    let department = answer.department;
+                    let departmentId = convertDeparmentId(department);
+
                     db.query(
                         `INSERT INTO roles(department_id, title, salary)
                             VALUES((SELECT id FROM department WHERE name = "${department}"), "${name}", "${salary}");`,
@@ -204,71 +204,62 @@ function askQuestion() {
                 });
                 break;
             case "Add Employee":
-                inquirer.prompt(addEmployee).then((employeeResponse) => {
+                inquirer.prompt(addEmployee).then(async(answer) => {
                     //Insert new employee with firstname, lastname, role
-                    var firstName = employeeResponse.firstname;
-                    var lastName = employeeResponse.lastname;
-                    var role = employeeResponse.employeerole;
-                    var manager = employeeResponse.employeemanager;
-
-                    if (manager !== "No manager needed") {
-                        db.query(
-                            `SELECT id FROM employee WHERE CONCAT(first_name, " ", last_name) = "${manager}"`,
-                            function(err, results) {
-                                var managerid = results[0].id;
-                                var query = `INSERT INTO employee(roles_id, first_name, last_name, manager_id)
-                                    VALUES((SELECT id FROM roles WHERE title = "${role}"), "${firstName}", "${lastName}", ${managerid});`;
-                                db.query(query, function(err, results) {
-                                    if (err) {
-                                        console.log(err);
-                                        return;
-                                    } else {
-                                        console.log("success!");
-                                    }
-                                    askQuestion();
-                                });
-                            }
-                        );
-                    } else {
-                        var query = `INSERT INTO employee(roles_id, first_name, last_name)
-                                    VALUES((SELECT id FROM roles WHERE title = "${role}"), "${firstName}", "${lastName}");`;
-                        db.query(query, function(err, results) {
-                            if (err) {
-                                console.log("error:" + err.message);
-                                return;
-                            } else {
-                                console.log("success!");
-                            }
-                            askQuestion();
-                        });
-                    }
-                });
-                break;
-            case "Update an Employee Role":
-                inquirer.prompt(updateRole).then((updateroleResponse) => {
-                    //Update role for employee selected
-                    var employee = updateroleResponse.employeeUpdate;
-                    var role = updateroleResponse.employeeRoleUpdate;
-                    db.query(
-                        `UPDATE employee
-                            SET roles_id = (SELECT id FROM roles WHERE title = "${role}")
-                            WHERE CONCAT(first_name, " ", last_name) = "${employee}"`,
+                    let firstName = answer.firstname;
+                    let lastName = answer.lastname;
+                    let role = answer.employeerole;
+                    let manager = answer.employeemanager;
+                    let roleId = await convertRoleToId(role);
+                    let managerId = await convertMgrToId(manager);
+                    db.query(`INSERT INTO employee(role_id, first_name, last_name, manager_id)
+                                                     VALUES (?,?,?,?);`, [roleId, firstName, lastName, managerId],
                         function(err, results) {
-                            if (err) {
-                                console.log("error:" + err.message);
-                                return;
-                            } else {
-                                console.log("success!");
-                            }
-                            askQuestion();
-                        }
-                    );
-                });
-                break;
-        }
-    });
-}
+                            console.log(err)
 
+                        });
+                    askQuestion();
+
+                });
+        }
+    })
+}
+const convertDeparmentId = (role) => {
+    return new Promise(function(resolve, reject) {
+        db.query(
+            `SELECT * FROM deparment WHERE title LIKE '%${department}%';`,
+            function(err, results) {
+                if (err) throw err;
+                let id = results[0].id;
+                resolve(id);
+            }
+        );
+    });
+};
+const convertRoleToId = (role) => {
+    return new Promise(function(resolve, reject) {
+        db.query(
+            `SELECT * FROM roles WHERE title LIKE '%${role}%';`,
+            function(err, results) {
+                if (err) throw err;
+                let id = results[0].id;
+                resolve(id);
+            }
+        );
+    });
+};
+const convertMgrToId = (mgr) => {
+    return new Promise(function(resolve, reject) {
+        db.query(
+            `SELECT * FROM employee WHERE CONCAT(first_name, ' ', last_name) LIKE '%${mgr}%';`,
+            function(err, results) {
+                if (err) throw err;
+                let id = results[0].id;
+                resolve(id);
+            }
+        );
+    });
+};
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
