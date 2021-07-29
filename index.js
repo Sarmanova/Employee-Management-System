@@ -38,6 +38,7 @@ const allOptions = [{
         "Add Department",
         "Add Role",
         "Add Employee",
+        "Update Employee,Role",
         "Quit",
     ],
 }, ];
@@ -111,15 +112,15 @@ function init() {
     });
 
     db.query("SELECT title as name FROM roles", function(err, results) {
-        var roleNames = results;
+        let roleNames = results;
         addEmployee[2].choices = roleNames;
-        //updateRole[1].choices = roleNames;
+        updateRole[1].choices = roleNames;
     });
 
     db.query(
         'SELECT CONCAT(first_name, " ", last_name) as name FROM employee WHERE manager_id is null',
         function(err, results) {
-            var managerNames = results;
+            let managerNames = results;
             addEmployee[3].choices = managerNames;
             addEmployee[3].choices.push("No manager needed");
         }
@@ -128,7 +129,7 @@ function init() {
     db.query(
         'SELECT CONCAT(first_name, " ", last_name) as name FROM employee',
         function(err, results) {
-            var employeeNames = results;
+            let employeeNames = results;
             updateRole[0].choices = employeeNames;
         }
     );
@@ -217,6 +218,29 @@ function askQuestion() {
                     );
                     askQuestion();
                 });
+                break;
+            case "Update Employee,Role":
+                inquirer.prompt(updateRole).then((answer) => {
+                    //Update role for employee selected
+                    let employee = answer.employeeUpdate;
+                    let role = answer.employeeRoleUpdate;
+                    db.query(
+                        `UPDATE employee SET role_id = (SELECT id FROM roles WHERE title = "%${role}%")
+                            WHERE CONCAT(first_name, " ", last_name) = "%${employee}%"`,
+                        function(err, results) {
+                            if (err) {
+                                console.log("error:" + err.message);
+                                return;
+                            } else {
+                                console.log("Updated!");
+                            }
+                            askQuestion();
+                        }
+                    );
+                });
+                break;
+            case "Quit":
+                askQuestion();
         }
     });
 }
