@@ -44,13 +44,13 @@ const allOptions = [{
 
 const addDepartment = [{
     type: "input",
-    message: "What is the name of the department you would like to add?",
+    message: "What is the name of the department?",
     name: "department",
 }, ];
 
 const addRole = [{
         type: "input",
-        message: "What is the name of the role you would like to add?",
+        message: "What is the name of the role?",
         name: "role",
     },
     {
@@ -104,9 +104,7 @@ const updateRole = [{
     },
 ];
 
-
 function init() {
-
     db.query("SELECT name FROM department", function(err, results) {
         let departmentNames = results;
         addRole[2].choices = departmentNames;
@@ -118,7 +116,6 @@ function init() {
         //updateRole[1].choices = roleNames;
     });
 
-
     db.query(
         'SELECT CONCAT(first_name, " ", last_name) as name FROM employee WHERE manager_id is null',
         function(err, results) {
@@ -127,7 +124,6 @@ function init() {
             addEmployee[3].choices.push("No manager needed");
         }
     );
-
 
     db.query(
         'SELECT CONCAT(first_name, " ", last_name) as name FROM employee',
@@ -182,15 +178,14 @@ function askQuestion() {
                 });
                 break;
             case "Add Role":
-                inquirer.prompt(addRole).then((answer) => {
+                inquirer.prompt(addRole).then(async(answer) => {
                     let name = answer.role;
                     let salary = answer.salary;
                     let department = answer.department;
-                    let departmentId = convertDeparmentId(department);
-
+                    let departmentId = await convertDeparmentId(department);
                     db.query(
                         `INSERT INTO roles(department_id, title, salary)
-                            VALUES((SELECT id FROM department WHERE name = "${department}"), "${name}", "${salary}");`,
+                            VALUES(?,?,?);`, [departmentId, name, salary],
                         function(err, results) {
                             if (err) {
                                 console.log("error:" + err.message);
@@ -212,22 +207,24 @@ function askQuestion() {
                     let manager = answer.employeemanager;
                     let roleId = await convertRoleToId(role);
                     let managerId = await convertMgrToId(manager);
-                    db.query(`INSERT INTO employee(role_id, first_name, last_name, manager_id)
-                                                     VALUES (?,?,?,?);`, [roleId, firstName, lastName, managerId],
+                    db.query(
+                        `INSERT INTO employee(role_id, first_name, last_name, manager_id)
+                          VALUES (?,?,?,?);`, [roleId, firstName, lastName, managerId],
                         function(err, results) {
-                            console.log(err)
-
-                        });
+                            console.log(err);
+                        },
+                        console.log("Added!")
+                    );
                     askQuestion();
-
                 });
         }
-    })
+    });
 }
-const convertDeparmentId = (role) => {
+// Converting string to number 
+const convertDeparmentId = (department) => {
     return new Promise(function(resolve, reject) {
         db.query(
-            `SELECT * FROM deparment WHERE title LIKE '%${department}%';`,
+            `SELECT * FROM department  WHERE  name LIKE '%${department}%';`,
             function(err, results) {
                 if (err) throw err;
                 let id = results[0].id;
