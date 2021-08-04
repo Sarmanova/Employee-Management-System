@@ -23,3 +23,9 @@ THEN I am prompted to select an employee to update and their new role and this i
 ```
 # Description
 This is a command line application that accepts user input 
+
+## Walkthrough video:
+
+![caption](demo.gif)
+
+ 
